@@ -1,52 +1,25 @@
 ==================================
-N64 to Gamecube Controller Adapter
+Wii to Nintendo 64 Adapter
 ==================================
 
-In 2009, I wanted to play some N64 games of mine, but all the
-controllers had worn down control sticks and it made things frustrating. I
-looked at cleaning or repairing them, but after a few failed attempts, it was
-clear I needed to try something else. I started looking at making an adapter to
-play the N64 using a Gamecube controller.
+I wanted to do something with arduino and one friend suggested the
+posibility of play with n64 using wiimote
 
-I found the existing `Cube64 Project`_ which did exactly that using a PIC
-microcontroller. At the time, I had 0 experience with programming
-microcontrollers, and programming a PIC required some programming circuitry
-that I didn't quite understand. Perhaps it wasn't that complicated, but my
-brother did happen to have an Arduino_ laying around, so I decided to take a
-shot at writing the code for the Arduino.
-
-This is that code. With only an Arduino and a 1K resistor, I successfully
-enjoyed my N64 games using a Gamecube controller, complete with Rumble!
-
-.. _Arduino: http://arduino.cc/en/Main/ArduinoBoardDuemilanove
+The project is based on Gamecube-N64-Controller (I forked it). You can
+find technical details there
 
 Materials
 =========
-This is an extensive list of what's required. A lot I had laying around already, nothing was that expensive.
 
-* A Gamecube controller
+* Nintendo 64
 
-* An N64
+* Computer and bluetooth support
 
-* An Arduino. I used the Duemilanove with an AtMega328 running at 16MHz. A
+* An Arduino. I used the UNO with an AtMega328 running at 16MHz. A
   different chip may have different timings, and a different speed will most
   certainly require modifications to the timing code.
 
-* Gamecube controller extension cables. I picked a couple of these off eBay so
-  that I didn't have to splice my GC controller cables up. I spliced the
-  extension cables to plug into the arduino, so I would have a nice socket to
-  plug the GC controllers into.
-
-* A 64 controller, to splice the plug from. A 64 extension cable would also
-  work, but since my existing controllers were pretty much useless, I cut the
-  cables to use to connect the Arduino to the N64 itself.
-
-* Some wire and alligator clips or a breadboard or something to hook everything
-  up with
-
-* A single 1K ohm resistor, as a pull-up resistor. Higher resistance will
-  probably work just fine. I'm not an electronics guy, but the 1K works fine
-  for me.
+* Two wires to connect arduino with nintendo 64
 
 Quick Setup
 ===========
@@ -65,51 +38,21 @@ The N64 controller cord had 3 wires: ground, +3.3V, and data. The pin-out is sho
 The wire colors may or may not vary depending on the model, I would check that
 the wire colors match the pin-out before you connect them up.
 
-.. figure:: https://github.com/brownan/Gamecube-N64-Controller/raw/master/connections.png
+.. figure:: https://github.com/maxpowel/Wii-N64-Controller/raw/master/connections.png
     :alt: Gamecube and N64 controller connections
 
     Figure 1: Pin numbers for an N64 plug (left) and a Gamecube socket (right).
     Credit to this diagram goes to the `Cube64 project`_.
 
-Hooking up the Gamecube controller to the Arduino
+Connect Wiimote
 -------------------------------------------------
-The GC controller cord had 6 wires: +5V, +3.3V, data, 2x ground, and one unused wire. The pin-out is shown in Figure 1 (right).
-
-1. +5V (green) - connect to Arduino +5V supply
-
-2. Data (red) - connect to Arduino digital I/O 2
-
-3. GND (yellow) - connect to Arduino ground
-
-4. GND (brown) - connect to Arduino ground
-
-5. N/C (black) - don't connect
-
-6. +3.3V (orange) - connect to Arduino +3.3V supply
-
-The internal wire colors may vary from the ones listed here. Remember, I
-spliced some third party GC cables I got off eBay, so I wouldn't be surprised
-if the wire colors were not the same as an official GC controller. Verify the
-colors match the actual pin-out.
-
-Also, as you can see, the Arduino provides power to the controller: 3.3V to the
-circuits, and 5V for the rumble. The Arduino needs its own power supplied to
-it, either via USB or an external power brick. The N64 doesn't provide enough
-power for the Arduino.
-
-Attaching the Pull-up Resistor
-------------------------------
-The protocol requires the data line to be idle-high, so **attach the 1K
-resistor between digital I/O 2 and the 3.3V supply**. This will keep the line
-at 3.3V unless the Arduino or the controller pulls it down to ground.
+You can use any software but I have used CWiid
+On Linux, just type sudo aptitude install libcwiid
 
 Compiling the Code
 ------------------
-``gamecube.pde`` provided is the entire source. You can open it with the
-Arduino IDE and compile it, that should work. I've also provided a Makefile
-that I used when developing it (since I needed to analyze the pre-assembled
-code). If you use the makefile, you may need to edit the top for the locations
-of the Arduino libraries.
+``wii_n64.pde`` provided is the entire source. You can open it with the
+Arduino IDE and compile it, that should work.
 
 Running it
 ----------
@@ -122,59 +65,21 @@ If you turn the N64 off to e.g. load a new game, you'll need to reset the
 Arduino. Just hit the reset button when the N64 is off before you turn it back
 on.
 
-I've tested this with every game I have, and it works with both wired
-controllers and the wavebird. I haven't tried it with any third party
-controllers.
-
-Configuration
+Customization
 =============
-There are two things that people may want to customize. Both of them require
-editing source code, I didn't make any easy or dynamic interface to them.
+An example for Zelda Ocarina of time is provided. It is minimal and dirty 
+script in python so you can use for build yours own script
 
-X and Y button mappings
------------------------
-Since the X and Y buttons don't exist on the N64, one has some freedom in
-mapping these buttons. I like to map them to C-down and C-left respectively for
-games like Starfox where those buttons are more significant. For something like
-Perfect Dark where C-left and C-right strafe, I map X and Y to those instead.
+Data Enconding
+==============
+Ensure that your script send 2 unsigned bytes for the controller buttons
+and other 2 signed bytes for the stick position
 
-You can go to around line 235 in ``gamecube.pde`` to configure the mapping. Try
-uncommenting the mapping for X -> Cdown and comment out the line for X ->
-Cright if you'd prefer that mapping.
+One bit per button in the following order (2 first bytes):
+A, B, Z, Start, Dup, Ddown, Dleft, Dright, 0, 0, L, R, Cup, Cdown, Cleft, Cright
 
-Analog Stick Curve
-------------------
-On some games, such as Perfect Dark, the control stick feels a bit weird. That
-is, it feels too sensitive, like there's not enough difference between fully
-tilted and slightly tilted. (or maybe it was not sensitive enough, I forget)
+You can check the example to see how it works in python
 
-To help with this, I apply a curve mapping inputs on the GC controller to
-outputs on the N64 "controller" in a non-linear fashion.
-
-.. figure:: https://github.com/brownan/Gamecube-N64-Controller/raw/master/curve.png
-    :alt: Analog Stick curve graph
-
-    Figure 2: A graph showing a linear mapping of inputs to outputs (red) and a
-    cubic mapping from inputs to outputs (green). Inputs (from the GC
-    controller) are along the X axis, while outputs (to the N64) are on the Y
-    axis.
-
-To turn this off, head to line 279 in ``gamecube.pde`` and change the 0 to a 1.
-In my experience, this curve helps in some games, but hurts in others.
-
-Method
-======
-Here's the technical info on how all this works
-
-Hardware Setup
---------------
-The gamecube connection has 6 wires: 2 ground, a 3.3V rail, a 5V rail for rumble, a data line, and an unused line. The data line goes into digital I/O 2. The rest go in their obvious places.
-
-The N64 has 3 wires: 3.3V power supply, data, and ground. I don't use the power, the arduino needs to be powered externally anyways and provides its own 3.3V supply. The data plugs into digital I/O 8 and ground goes to ground.
-
-Pull-up Resistor
-----------------
-The line to the controller is idle-high at 3.3V and is brought low to signal a bit. This means we can't use the Arduino's built-in pull-up resistors to signal, since they operate at 5V. The solution I found works is to bridge the Arduino's 3.3V supply and digital I/O pin 2 with a 1K ohm resistor. This keeps the line high at 3.3V when the pin is in input mode, and can be lowered by setting the pin to output a 0. Thus forming the signaling mechanism.
 
 Signaling
 ---------
@@ -197,9 +102,14 @@ Resources
 * `Nintendo 64 Controller Protocol information`_
 * `N64/Gamecube to USB adapter Project`_ had some code that was useful as a reference
 * `N64 to GameCube conversion project`_ (not sure why anyone would want to go in this direction)
+* `Gamecube-N64-Controller`_
+* `Use an Arduino with an N64 controller`_
+
 
 .. _Cube64 Project: http://cia.vc/stats/project/navi-misc/cube64
 .. _Gamecube Controller Protocol information: http://www.int03.co.uk/crema/hardware/gamecube/gc-control.htm
 .. _Nintendo 64 Controller Protocol information: http://www.mixdown.ca/n64dev/
 .. _N64/Gamecube to USB adapter Project: http://www.raphnet.net/electronique/gc_n64_usb/index_en.php
 .. _N64 to GameCube conversion project: http://www.raphnet.net/electronique/x2wii/index_en.php
+.. _Gamecube-N64-Controller: https://github.com/brownan/Gamecube-N64-Controller
+.. _Use an Arduino with an N64 controller: http://www.instructables.com/id/Use-an-Arduino-with-an-N64-controller/step4/Arduino-Code-in-Depth/
