@@ -100,7 +100,7 @@ while( cosa ):
 	# L Butto is not used in ocarina of time :P
 	
 	#R Button (shield)
-	if (w.state['acc'][0] < 100 and w.state['acc'][2] < 130 and w.state['acc'][2] > 110) or w.state['nunchuk']['buttons'] == 2:
+	if w.state['acc'][0] < 100 and w.state['acc'][2] < 130 and w.state['acc'][2] > 110:
 		#print 'R'
 		byte2 = byte2 | 0x10
 		
